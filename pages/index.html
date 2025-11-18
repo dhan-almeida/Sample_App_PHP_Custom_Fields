@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>QBO Custom Fields PHP Sample</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f7f7f7;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    section {
+      background: #fff;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid #0077c5;
+      background: #0077c5;
+      colour: #fff;
+    }
+    input, select {
+      padding: 0.4rem 0.5rem;
+      margin: 0.2rem 0 0.6rem 0;
+      width: 100%;
+      max-width: 320px;
+    }
+    pre {
+      background: #111;
+      colour: #0f0;
+      padding: 0.75rem;
+      font-size: 12px;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow: auto;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>QBO Custom Fields PHP Sample</h1>
+  <p>This sample shows OAuth sign in, managing custom field definitions via GraphQL and creating an invoice with a Cost of Fuel custom field.</p>
+
+  <section>
+    <h2>1. Connect to QuickBooks</h2>
+    <button id="btn-login">Sign in with QuickBooks</button>
+  </section>
+
+  <section>
+    <h2>2. Custom fields (App Foundations GraphQL)</h2>
+    <button id="btn-get-cf">Get custom fields</button>
+
+    <h3>Create custom field</h3>
+    <label>Label</label>
+    <input id="cf-label" value="Cost of Fuel"/>
+
+    <label>Data type</label>
+    <select id="cf-data-type">
+      <option value="STRING">STRING</option>
+      <option value="NUMBER">NUMBER</option>
+    </select>
+
+    <button id="btn-create-cf">Create custom field</button>
+
+    <h3>Update custom field</h3>
+    <label>Field id</label>
+    <input id="cf-update-id"/>
+
+    <label>New label</label>
+    <input id="cf-update-label"/>
+
+    <button id="btn-update-cf">Update custom field</button>
+
+    <h3>Response</h3>
+    <pre id="cf-output"></pre>
+  </section>
+
+  <section>
+    <h2>3. Cost of fuel invoice</h2>
+    <p>Use a DefinitionId (legacyIdV2 from the custom field definition) and existing Customer and Item ids from your sandbox.</p>
+
+    <label>DefinitionId (legacyIdV2)</label>
+    <input id="fuel-definition-id"/>
+
+    <label>Customer id</label>
+    <input id="fuel-customer-id"/>
+
+    <label>Item id</label>
+    <input id="fuel-item-id"/>
+
+    <label>Fuel cost</label>
+    <input id="fuel-cost" type="number" step="0.01" value="50.00"/>
+
+    <button id="btn-create-fuel-invoice">Create invoice with Cost of Fuel</button>
+
+    <h3>Response</h3>
+    <pre id="fuel-output"></pre>
+  </section>
+
+<script>
+document.getElementById('btn-login')?.addEventListener('click', () => {
+  window.location.href = '/api/auth/login';
+});
+
+async function safeFetch(url, options) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    return { status: res.status, json };
+  } catch {
+    return { status: res.status, json: text };
+  }
+}
+
+document.getElementById('btn-get-cf')?.addEventListener('click', async () => {
+  const out = document.getElementById('cf-output');
+  out.textContent = 'Loading...';
+  const result = await safeFetch('/api/quickbook/custom-fields', { method: 'GET' });
+  out.textContent = JSON.stringify(result, null, 2);
+});
+
+document.getElementById('btn-create-cf')?.addEventListener('click', async () => {
+  const label = document.getElementById('cf-label').value;
+  const dataType = document.getElementById('cf-data-type').value;
+
+  const payload = {
+    label,
+    dataType,
+    active: true,
+    associations: [
+      {
+        associatedEntity: 'Invoice',
+        active: true,
+        validationOptions: { required: false },
+        allowedOperations: ['Create', 'Update'],
+        associationCondition: null
+      }
+    ]
+  };
+
+  const out = document.getElementById('cf-output');
+  out.textContent = 'Creating...';
+
+  const result = await safeFetch('/api/quickbook/custom-fields', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  out.textContent = JSON.stringify(result, null, 2);
+});
+
+document.getElementById('btn-update-cf')?.addEventListener('click', async () => {
+  const id = document.getElementById('cf-update-id').value;
+  const newLabel = document.getElementById('cf-update-label').value;
+
+  if (!id) {
+    alert('Field id is required');
+    return;
+  }
+
+  const payload = {};
+  if (newLabel) payload.label = newLabel;
+
+  const out = document.getElementById('cf-output');
+  out.textContent = 'Updating...';
+
+  const result = await safeFetch('/api/quickbook/custom-fields/' + encodeURIComponent(id), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  out.textContent = JSON.stringify(result, null, 2);
+});
+
+document.getElementById('btn-create-fuel-invoice')?.addEventListener('click', async () => {
+  const definitionId = document.getElementById('fuel-definition-id').value;
+  const customerId   = document.getElementById('fuel-customer-id').value;
+  const itemId       = document.getElementById('fuel-item-id').value;
+  const fuelCost     = parseFloat(document.getElementById('fuel-cost').value || '0');
+
+  if (!definitionId || !customerId || !itemId) {
+    alert('DefinitionId, customer id and item id are required');
+    return;
+  }
+
+  const payload = { definitionId, customerId, itemId, fuelCost };
+
+  const out = document.getElementById('fuel-output');
+  out.textContent = 'Creating invoice...';
+
+  const result = await safeFetch('/api/quickbook/invoices/cost-of-fuel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  out.textContent = JSON.stringify(result, null, 2);
+});
+</script>
+</body>
+</html>
