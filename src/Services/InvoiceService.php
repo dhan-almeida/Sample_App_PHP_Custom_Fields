@@ -153,10 +153,7 @@ class InvoiceService
         foreach ($protectedFields as $field) {
             if (isset($additionalData[$field])) {
                 throw new \InvalidArgumentException(
-                    sprintf(
-                        '%s should not be in additionalData. Use the method parameters instead.',
-                        $field
-                    )
+                    "{$field} should not be in additionalData. Use the method parameters instead."
                 );
             }
         }
