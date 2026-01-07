@@ -100,13 +100,41 @@ composer install
 
 ### 2. Configure Environment
 
-Create a `.env` file in the project root:
+#### Step 2.1: Create Your Environment File
+
+The project includes an `env.example` template file. Copy it to create your `.env` file:
 
 ```bash
-cp .env.example .env
+# Copy the example file
+cp env.example .env
 ```
 
-Edit `.env` with your QuickBooks app credentials:
+**Important**: The `.env` file is where you'll store your **secret credentials**. This file is automatically ignored by git (via `.gitignore`) to keep your secrets safe.
+
+#### Step 2.2: Get Your QuickBooks Credentials
+
+1. **Visit**: [QuickBooks Developer Portal](https://developer.intuit.com/)
+2. **Sign in** to your Intuit Developer account
+3. **Navigate to**: Dashboard → My Apps
+4. **Select your app** (or click "Create an app" if you don't have one)
+5. **Go to**: Keys & OAuth tab
+6. **Copy** your credentials:
+   - **Client ID** (looks like: `ABmRqMvLpDZe7fjKo0p4hxYrBQmVGC6aHd5R8wV3kF`)
+   - **Client Secret** (looks like: `wNjRy5xMpQ7tKvL3cH8dF2sG9bX6mZ4n`)
+
+#### Step 2.3: Configure Redirect URI in QuickBooks
+
+In the same "Keys & OAuth" section:
+
+1. **Scroll down** to "Redirect URIs"
+2. **Add**: `http://localhost:3000/api/auth/callback`
+3. **Click** "Save"
+
+⚠️ **Important**: The redirect URI must match **exactly** (including http:// and the port number)
+
+#### Step 2.4: Edit Your .env File
+
+Open the `.env` file you created and fill in your credentials:
 
 ```env
 # QuickBooks OAuth 2.0 Credentials
@@ -114,12 +142,28 @@ CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
 REDIRECT_URI=http://localhost:3000/api/auth/callback
 
-# Environment
+# Environment (use "production" for both sandbox and production)
 ENVIRONMENT=production
 
-# API Endpoints (defaults shown)
+# API Endpoints (defaults - usually don't need to change)
 APP_FOUNDATIONS_GRAPHQL_URL=https://qb.api.intuit.com/graphql
 QBO_BASE_URL=https://quickbooks.api.intuit.com
+```
+
+**Replace**:
+- `your_client_id_here` → Your actual Client ID
+- `your_client_secret_here` → Your actual Client Secret
+
+#### Step 2.5: Verify Your Setup
+
+Check that your `.env` file is in the correct location:
+
+```bash
+# Should show your .env file
+ls -la .env
+
+# Should show the file exists (don't display contents - it has secrets!)
+cat .env | head -5
 ```
 
 ### 3. Start the Server
@@ -128,9 +172,53 @@ QBO_BASE_URL=https://quickbooks.api.intuit.com
 php -S localhost:3000 -t public
 ```
 
+You should see:
+```
+PHP 8.1.x Development Server (http://localhost:3000) started
+```
+
 ### 4. Open in Browser
 
 Navigate to: **http://localhost:3000**
+
+### 5. Test Authentication
+
+1. Click **"Sign in with QuickBooks"**
+2. You'll be redirected to QuickBooks OAuth page
+3. **Sign in** with your QuickBooks account
+4. **Authorize** the app to access your company
+5. You'll be redirected back to the app
+
+✅ If you see the app interface with "2. Custom fields" section, you're all set!
+
+---
+
+### 🔧 Environment File Reference
+
+The `env.example` file includes detailed documentation for each setting:
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `CLIENT_ID` | ✅ Yes | Your QuickBooks App Client ID | `ABmRqMvLpDZe...` |
+| `CLIENT_SECRET` | ✅ Yes | Your QuickBooks App Client Secret | `wNjRy5xMpQ7t...` |
+| `REDIRECT_URI` | ✅ Yes | OAuth callback URL | `http://localhost:3000/api/auth/callback` |
+| `ENVIRONMENT` | ✅ Yes | API environment | `production` |
+| `APP_FOUNDATIONS_GRAPHQL_URL` | Optional | GraphQL API endpoint | `https://qb.api.intuit.com/graphql` |
+| `QBO_BASE_URL` | Optional | REST API endpoint | `https://quickbooks.api.intuit.com` |
+
+### 🎯 Sandbox vs Production
+
+**For Testing (Sandbox)**:
+- Use **Sandbox** keys from QuickBooks Developer Portal
+- Connect to a **Sandbox** company
+- All data is fake and safe to experiment with
+
+**For Production**:
+- Use **Production** keys from QuickBooks Developer Portal
+- Connect to a **real** QuickBooks company
+- All changes affect real business data
+
+**Note**: The API endpoints (`APP_FOUNDATIONS_GRAPHQL_URL` and `QBO_BASE_URL`) are the same for both sandbox and production. Your credentials determine which environment you're in.
 
 ---
 
@@ -422,10 +510,79 @@ This prevents:
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### Environment Setup Issues
+
+#### Issue: "Failed to load environment variables" or similar errors
+**Solution**: 
+1. Check that `.env` file exists in the project root (same directory as `composer.json`)
+   ```bash
+   ls -la .env
+   ```
+2. Verify the file has the correct permissions (readable)
+   ```bash
+   chmod 644 .env
+   ```
+3. Make sure you copied from `env.example`:
+   ```bash
+   cp env.example .env
+   ```
+
+#### Issue: "Invalid client" or "Unauthorized client" error
+**Solution**: 
+1. **Verify credentials** in your `.env` file:
+   - Open `.env` in a text editor
+   - Check `CLIENT_ID` and `CLIENT_SECRET` have no extra spaces
+   - Ensure no quotes around the values
+   - Verify they match your QuickBooks Developer Portal exactly
+
+2. **Check credential type**:
+   - For Sandbox testing → Use **Sandbox** keys
+   - For Production → Use **Production** keys
+   - Keys are found in different tabs in the Developer Portal
+
+#### Issue: OAuth redirect fails or "Redirect URI mismatch"
+**Solution**:
+1. **Check `.env` file**: Ensure `REDIRECT_URI` is exactly:
+   ```
+   REDIRECT_URI=http://localhost:3000/api/auth/callback
+   ```
+2. **Check QuickBooks Portal**:
+   - Go to Your App → Keys & OAuth → Redirect URIs
+   - Ensure `http://localhost:3000/api/auth/callback` is listed
+   - Must be **exact match** (including `http://` and port)
+   - Save after adding
+
+3. **Common mistakes**:
+   - ❌ `https://` instead of `http://` for localhost
+   - ❌ Missing port number `:3000`
+   - ❌ Extra trailing slash `/`
+   - ✅ Correct: `http://localhost:3000/api/auth/callback`
+
+#### Issue: "CLIENT_ID is not defined" or similar variable errors
+**Solution**:
+1. **Restart the PHP server** after editing `.env`:
+   ```bash
+   # Stop server (Ctrl+C)
+   # Start again
+   php -S localhost:3000 -t public
+   ```
+2. **Check variable names**: Must match exactly (case-sensitive):
+   - ✅ `CLIENT_ID` (correct)
+   - ❌ `client_id` (wrong)
+   - ❌ `CLIENTID` (wrong)
+
+### Authentication Issues
 
 #### Issue: "Not authenticated" error
 **Solution**: Click "Sign in with QuickBooks" to authorize the app.
+
+#### Issue: Session expired or token invalid
+**Solution**:
+1. Tokens are stored in memory (resets when server restarts)
+2. Click "Sign in with QuickBooks" again
+3. For production, implement persistent token storage (database/Redis)
+
+### API Issues
 
 #### Issue: "CustomField should not be in additionalData"
 **Solution**: Use the `customFields` parameter instead of putting `CustomField` in `additionalData`.
