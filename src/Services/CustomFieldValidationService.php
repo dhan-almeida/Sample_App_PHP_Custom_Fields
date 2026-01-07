@@ -61,13 +61,12 @@ class CustomFieldValidationService
     {
         $definitions = self::getDefinitions();
 
-        // If definition not found, we can't validate
+        // If definition not found, this is a validation error
         if (!isset($definitions[$definitionId])) {
             return [
-                'valid' => true, // Allow it to proceed
-                'error' => null,
-                'expectedType' => $providedType,
-                'warning' => "Definition ID {$definitionId} not found in cache. Skipping validation.",
+                'valid' => false,
+                'error' => "Custom field definition not found. Please ensure the field exists in QuickBooks.",
+                'expectedType' => null,
             ];
         }
 
@@ -200,19 +199,45 @@ class CustomFieldValidationService
                 continue;
             }
 
-            $result = self::validateField($definitionId, $value, $providedType);
-
-            if (!$result['valid']) {
-                $errors[] = "Field {$definitionId}: {$result['error']}";
+            // First, get the expected type from the definition (without type validation)
+            // This allows us to auto-correct the type before validating the value
+            $definitions = self::getDefinitions();
+            
+            if (!isset($definitions[$definitionId])) {
+                // Definition not found - this is a validation error
+                $errors[] = "Field {$definitionId}: Custom field definition not found. Please ensure the field exists in QuickBooks.";
                 continue;
             }
 
-            // Auto-correct the type if needed
-            if ($result['expectedType'] && $providedType !== $result['expectedType']) {
-                $field['type'] = $result['expectedType'];
-                $corrected[] = "Field {$definitionId}: type corrected from '{$providedType}' to '{$result['expectedType']}'";
+            $definition = $definitions[$definitionId];
+            $expectedType = strtoupper($definition['dataType'] ?? 'STRING');
+            $isActive = $definition['active'] ?? false;
+
+            // Check if the field is active
+            if (!$isActive) {
+                $errors[] = "Field {$definitionId}: Custom field definition is not active";
+                continue;
+            }
+
+            // Auto-correct the type if needed (before validation)
+            if ($expectedType && strtoupper($providedType ?? '') !== $expectedType) {
+                $field['type'] = $expectedType;
+                
+                // Create a clear correction message
+                $fromType = $providedType === null ? '(not provided)' : "'{$providedType}'";
+                $corrected[] = "Field {$definitionId}: type corrected from {$fromType} to '{$expectedType}'";
+            }
+
+            // Now validate the value with the corrected type
+            $result = self::validateField($definitionId, $value, $field['type']);
+
+            if (!$result['valid']) {
+                $errors[] = "Field {$definitionId}: {$result['error']}";
             }
         }
+        
+        // Unset the reference to avoid potential side effects
+        unset($field);
 
         return [
             'valid' => empty($errors),
