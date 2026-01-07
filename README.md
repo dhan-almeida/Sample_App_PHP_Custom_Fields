@@ -4,7 +4,7 @@ A production-ready PHP application demonstrating **best practices** for working 
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [What This App Does](#what-this-app-does)
 - [Key Features](#key-features)
@@ -19,7 +19,7 @@ A production-ready PHP application demonstrating **best practices** for working 
 
 ---
 
-## 🎯 What This App Does
+## What This App Does
 
 This application demonstrates the **complete workflow** for working with QuickBooks Online Custom Fields:
 
@@ -43,27 +43,27 @@ This application demonstrates the **complete workflow** for working with QuickBo
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🔒 **Security & Data Protection**
+### Security & Data Protection
 - ✅ Prevents CustomField overwriting via `additionalData`
 - ✅ Protects core fields (Line, CustomerRef, DisplayName, etc.)
 - ✅ Prevents Id and SyncToken tampering
 - ✅ Input validation and sanitization
 
-### 🎨 **Smart Type Handling**
+### Smart Type Handling
 - ✅ Automatic `NumberValue` vs `StringValue` selection
 - ✅ Type validation and auto-correction
 - ✅ Dropdown option validation
 - ✅ Active field checking
 
-### 🚀 **Developer Experience**
+### Developer Experience
 - ✅ Clean, RESTful API design
 - ✅ Comprehensive error messages
 - ✅ Interactive web UI for testing
 - ✅ Full documentation with examples
 
-### 📊 **Production Ready**
+### Production Ready
 - ✅ Proper error handling
 - ✅ Validation caching for performance
 - ✅ PSR-compliant code structure
@@ -71,7 +71,7 @@ This application demonstrates the **complete workflow** for working with QuickBo
 
 ---
 
-## 📦 Requirements
+## Requirements
 
 ### System Requirements
 - **PHP**: 8.1 or later
@@ -100,7 +100,7 @@ This application demonstrates the **complete workflow** for working with QuickBo
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -187,31 +187,146 @@ You should see:
 PHP 8.1.x Development Server (http://localhost:3000) started
 ```
 
-**💡 Alternative: Using ngrok for Public Access**
+**Alternative: Using ngrok for Public Access**
 
-If QuickBooks OAuth doesn't work with localhost, use ngrok to create a public URL:
+QuickBooks OAuth requires a publicly accessible callback URL. Since `localhost` is not accessible from the internet, you need ngrok to create a secure tunnel.
+
+#### Why ngrok is needed:
+- QuickBooks OAuth cannot redirect to `localhost:3000`
+- ngrok creates a public HTTPS URL that tunnels to your local server
+- The public URL can be used as the OAuth redirect URI
+- Essential for local development and testing
+
+#### Complete ngrok Setup:
+
+**Step 1: Install ngrok**
+
+Choose your platform:
 
 ```bash
-# Install ngrok (one-time setup)
-brew install --cask ngrok           # macOS
-winget install Ngrok.Ngrok          # Windows
-sudo snap install ngrok             # Linux
+# macOS (Homebrew)
+brew install --cask ngrok
+ngrok version
 
-# Configure authtoken (one-time)
-ngrok config add-authtoken <your-token>
+# Windows (winget)
+winget install Ngrok.Ngrok
+ngrok version
 
-# Start server on port 5001
-php -S localhost:5001 -t public
+# Linux (Snap)
+sudo snap install ngrok
+ngrok version
 
-# In another terminal, start ngrok
-ngrok http 5001
-
-# Update .env with ngrok URL (e.g., https://abc123.ngrok-free.app/api/auth/callback)
-# Update QuickBooks Developer Portal with same URL
-# Restart PHP server
+# Or download from: https://ngrok.com/download
 ```
 
-**📖 Full ngrok guide**: See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for detailed instructions.
+**Step 2: Get Your ngrok Auth Token**
+
+1. Sign up for free at: https://dashboard.ngrok.com/signup
+2. Get your authtoken from: https://dashboard.ngrok.com/get-started/your-authtoken
+3. Copy the token (looks like: `2abc123def456ghi789jkl012mno345pqr678stu`)
+
+**Step 3: Configure ngrok**
+
+```bash
+# Add your authtoken (one-time configuration)
+ngrok config add-authtoken <your-token>
+
+# Example:
+# ngrok config add-authtoken 2abc123def456ghi789jkl012mno345pqr678stu
+```
+
+**Step 4: Start PHP Server on Port 5001**
+
+```bash
+# Note: Use port 5001 instead of 3000 for ngrok
+php -S localhost:5001 -t public
+```
+
+Keep this terminal window open.
+
+**Step 5: Start ngrok Tunnel**
+
+Open a **new terminal window** and run:
+
+```bash
+# Start ngrok tunnel to port 5001
+ngrok http 5001
+```
+
+You'll see output like this:
+
+```
+ngrok
+Session Status                online
+Forwarding                    https://abc123def456.ngrok-free.app -> http://localhost:5001
+```
+
+**Copy the Forwarding URL** (e.g., `https://abc123def456.ngrok-free.app`)
+
+**Step 6: Update Your Configuration**
+
+**A. Update `.env` file:**
+
+```env
+# Change from:
+REDIRECT_URI=http://localhost:3000/api/auth/callback
+
+# To (use your actual ngrok URL):
+REDIRECT_URI=https://abc123def456.ngrok-free.app/api/auth/callback
+```
+
+**B. Update QuickBooks Developer Portal:**
+
+1. Go to: https://developer.intuit.com/app/developer/myapps
+2. Select your app
+3. Navigate to: Keys & OAuth tab
+4. Scroll to: Redirect URIs section
+5. Click: Add URI
+6. Enter: `https://abc123def456.ngrok-free.app/api/auth/callback`
+7. Click: Save
+
+**Step 7: Restart PHP Server**
+
+```bash
+# Stop the server (Ctrl+C in the first terminal)
+# Start it again to load the new .env values
+php -S localhost:5001 -t public
+```
+
+**Step 8: Access Your App**
+
+Open your browser and navigate to your ngrok URL:
+```
+https://abc123def456.ngrok-free.app
+```
+
+Click "Sign in with QuickBooks" to test the OAuth flow.
+
+#### Important ngrok Notes:
+
+**Free Tier Limitations:**
+- The URL changes every time you restart ngrok
+- You must update `.env` and QuickBooks portal each time
+- Limited to 40 connections per minute
+
+**When ngrok URL Changes:**
+1. Copy new URL from ngrok terminal
+2. Update `REDIRECT_URI` in `.env`
+3. Update QuickBooks portal Redirect URIs
+4. Restart PHP server
+5. Test OAuth flow
+
+**For Permanent URL:**
+- Upgrade to ngrok paid plan ($10/month) for reserved domains
+- Or deploy your app to a public server (Heroku, AWS, etc.)
+
+**Troubleshooting:**
+- If OAuth fails, verify the ngrok URL in `.env` matches QuickBooks portal exactly
+- Include the full path: `/api/auth/callback`
+- Ensure both URLs use `https://` (not `http://`)
+- Check ngrok is still running in the second terminal
+
+**Full ngrok guide**: See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for comprehensive documentation including advanced configuration, security best practices, and detailed troubleshooting.
 
 ### 4. Open in Browser
 
@@ -229,7 +344,7 @@ Navigate to: **http://localhost:3000** (or your ngrok URL)
 
 ---
 
-### 🔧 Environment File Reference
+### Environment File Reference
 
 The `env.example` file includes detailed documentation for each setting:
 
@@ -242,7 +357,7 @@ The `env.example` file includes detailed documentation for each setting:
 | `APP_FOUNDATIONS_GRAPHQL_URL` | Optional | GraphQL API endpoint | `https://qb.api.intuit.com/graphql` |
 | `QBO_BASE_URL` | Optional | REST API endpoint | `https://quickbooks.api.intuit.com` |
 
-### 🎯 Sandbox vs Production
+### Sandbox vs Production
 
 **For Testing (Sandbox)**:
 - Use **Sandbox** keys from QuickBooks Developer Portal
@@ -258,7 +373,7 @@ The `env.example` file includes detailed documentation for each setting:
 
 ---
 
-## 📖 How to Use
+## How to Use
 
 ### Step 1: Authenticate with QuickBooks
 
@@ -360,7 +475,7 @@ The validation will:
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 ### Authentication Endpoints
 
@@ -405,7 +520,7 @@ The validation will:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Two-API Approach
 
@@ -492,7 +607,7 @@ sampleapp-customfields-php-full/
 
 ---
 
-## 🔒 Security Features
+## Security Features
 
 ### 1. Field Overwrite Protection
 
@@ -544,7 +659,7 @@ This prevents:
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Environment Setup Issues
 
@@ -673,7 +788,7 @@ To see detailed error information, check the browser console and network tab:
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### Official Documentation
 - [QuickBooks Custom Fields Guide](https://developer.intuit.com/app/developer/qbo/docs/workflows/create-custom-fields/get-started)
@@ -707,7 +822,7 @@ To see detailed error information, check the browser console and network tab:
 
 ---
 
-## 🤝 Support & Contributing
+## Support & Contributing
 
 ### Getting Help
 - Check the [Troubleshooting](#troubleshooting) section
@@ -723,7 +838,7 @@ When reporting issues, please include:
 
 ---
 
-## ⚠️ Important Notes
+## Important Notes
 
 ### Production Deployment
 - **DO NOT** commit `.env` file to version control
@@ -743,7 +858,7 @@ This sample application is provided as-is for educational purposes.
 
 ---
 
-## 🎉 Summary
+## Summary
 
 This application demonstrates **production-ready** implementation of QuickBooks Custom Fields API with:
 
