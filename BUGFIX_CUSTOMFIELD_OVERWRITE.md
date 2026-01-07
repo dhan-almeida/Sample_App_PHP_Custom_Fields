@@ -1,8 +1,8 @@
-# Bug Fix: CustomField Data Loss Prevention
+# Bug Fix: Entity Field Data Loss Prevention
 
 ## Issue Description
 
-A critical bug was identified where the `array_merge()` operation in entity creation methods could silently overwrite custom fields if `additionalData` contained a `CustomField` key.
+Critical bugs were identified where the `array_merge()` operation in entity creation methods could silently overwrite important fields if `additionalData` contained keys for those fields. This affected both `CustomField` and core entity fields like `Line`, `CustomerRef`, `DisplayName`, etc.
 
 ### Affected Methods
 - `InvoiceService::createInvoice()`
@@ -48,7 +48,7 @@ InvoiceService::createInvoice(
 
 ## The Fix
 
-Added explicit validation in all affected methods to prevent `CustomField` from being in `additionalData`:
+Added explicit validation in all affected methods to prevent `CustomField` and core entity fields from being in `additionalData`:
 
 ```php
 // Prevent CustomField in additionalData from overwriting the customFields parameter
@@ -57,7 +57,28 @@ if (isset($additionalData['CustomField'])) {
         'CustomField should not be in additionalData. Use the customFields parameter instead.'
     );
 }
+
+// Prevent core fields from being overwritten via additionalData
+$protectedFields = ['Line', 'CustomerRef']; // Varies by entity and method
+foreach ($protectedFields as $field) {
+    if (isset($additionalData[$field])) {
+        throw new \InvalidArgumentException(
+            sprintf(
+                '%s should not be in additionalData. Use the method parameters instead.',
+                $field
+            )
+        );
+    }
+}
 ```
+
+### Protected Fields by Entity
+
+- **InvoiceService::createInvoice()**: `Line`, `CustomerRef`, `CustomField`
+- **CustomerService::createCustomer()**: `DisplayName`, `CustomField`
+- **CustomerService::updateCustomer()**: `Id`, `SyncToken`, `CustomField`
+- **ItemService::createItem()**: `Name`, `Type`, `CustomField`
+- **ItemService::updateItem()**: `Id`, `SyncToken`, `CustomField`
 
 ### Benefits of This Approach
 
@@ -88,6 +109,7 @@ InvoiceService::createInvoice(
 
 ### ❌ Now Throws Error (Prevents Bug)
 
+**Example 1: Attempting to overwrite CustomField**
 ```php
 InvoiceService::createInvoice(
     customerId: '1',
@@ -104,6 +126,23 @@ InvoiceService::createInvoice(
 );
 
 // Error: "CustomField should not be in additionalData. Use the customFields parameter instead."
+```
+
+**Example 2: Attempting to overwrite core fields**
+```php
+InvoiceService::createInvoice(
+    customerId: '1',
+    lineItems: [
+        ['itemId' => '1', 'amount' => 100.00]
+    ],
+    customFields: [],
+    additionalData: [
+        'DocNumber' => 'INV-001',
+        'Line' => [...]  // ❌ Throws InvalidArgumentException
+    ]
+);
+
+// Error: "Line should not be in additionalData. Use the method parameters instead."
 ```
 
 ## Files Modified
@@ -143,7 +182,7 @@ curl -X POST http://localhost:3000/api/quickbook/invoices \
 # Expected: Success - invoice created with custom field
 ```
 
-### Test Case 2: Invalid Usage (Should Fail)
+### Test Case 2: Invalid Usage - CustomField Overwrite (Should Fail)
 ```bash
 curl -X POST http://localhost:3000/api/quickbook/invoices \
   -H "Content-Type: application/json" \
@@ -164,6 +203,27 @@ curl -X POST http://localhost:3000/api/quickbook/invoices \
 # }
 ```
 
+### Test Case 3: Invalid Usage - Core Field Overwrite (Should Fail)
+```bash
+curl -X POST http://localhost:3000/api/quickbook/invoices \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "1",
+    "lineItems": [{"itemId": "1", "amount": 100.00}],
+    "customFields": [],
+    "additionalData": {
+      "DocNumber": "INV-001",
+      "Line": [{"Amount": 500.00}]
+    }
+  }'
+
+# Expected: Error 500
+# Response: {
+#   "message": "Failed to create invoice",
+#   "error": "Line should not be in additionalData. Use the method parameters instead."
+# }
+```
+
 ## Impact Assessment
 
 ### Risk Level: HIGH → FIXED
@@ -180,9 +240,9 @@ curl -X POST http://localhost:3000/api/quickbook/invoices \
 
 ## Recommendations
 
-1. **For API Users**: Review any code that uses `additionalData` to ensure it doesn't include `CustomField`
-2. **For Developers**: Always use the `customFields` parameter for custom fields
-3. **For QA**: Add test cases to verify the validation catches invalid usage
+1. **For API Users**: Review any code that uses `additionalData` to ensure it doesn't include protected fields (`CustomField`, `Line`, `CustomerRef`, `DisplayName`, `Name`, `Type`, `Id`, or `SyncToken`)
+2. **For Developers**: Always use the dedicated method parameters for core fields and custom fields
+3. **For QA**: Add test cases to verify the validation catches invalid usage of both custom fields and core fields
 4. **For Documentation**: The updated guides include clear examples of correct usage
 
 ## Related Documentation
@@ -193,6 +253,18 @@ curl -X POST http://localhost:3000/api/quickbook/invoices \
 
 ## Conclusion
 
-This fix prevents a subtle but serious bug where custom fields could be silently lost due to `array_merge()` behavior. The validation ensures that the API contract is clear: use the `customFields` parameter for custom fields, and `additionalData` for other QuickBooks entity properties.
+This fix prevents subtle but serious bugs where both custom fields and core entity fields could be silently lost or corrupted due to `array_merge()` behavior. The validation ensures that the API contract is clear:
+
+- Use the `customFields` parameter for custom fields
+- Use dedicated method parameters for core fields (e.g., `lineItems`, `customerId`, `displayName`)
+- Use `additionalData` only for optional QuickBooks properties that don't have dedicated parameters
 
 The fix is **defensive programming** at its best - it makes the API more robust and developer-friendly by failing fast with clear error messages rather than allowing silent data corruption.
+
+### Security & Data Integrity Benefits
+
+✅ **Prevents data loss** - Core fields can't be accidentally overwritten  
+✅ **Prevents security issues** - `Id` and `SyncToken` can't be tampered with  
+✅ **Clear error messages** - Developers know exactly what went wrong  
+✅ **Type safety** - Encourages proper use of typed method parameters  
+✅ **Backwards compatible** - Only invalid code fails

@@ -84,6 +84,19 @@ class ItemService
             );
         }
 
+        // Prevent core fields from being overwritten via additionalData
+        $protectedFields = ['Name', 'Type'];
+        foreach ($protectedFields as $field) {
+            if (isset($additionalData[$field])) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        '%s should not be in additionalData. Use the method parameters instead.',
+                        $field
+                    )
+                );
+            }
+        }
+
         $client = self::getClient((string) $token);
 
         $path = sprintf(
@@ -190,6 +203,19 @@ class ItemService
             throw new \InvalidArgumentException(
                 'CustomField should not be in additionalData. Use the customFields parameter instead.'
             );
+        }
+
+        // Prevent core fields from being overwritten via additionalData
+        $protectedFields = ['Id', 'SyncToken'];
+        foreach ($protectedFields as $field) {
+            if (isset($additionalData[$field])) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        '%s should not be in additionalData. This field is managed internally.',
+                        $field
+                    )
+                );
+            }
         }
 
         // Validate and auto-correct custom field types

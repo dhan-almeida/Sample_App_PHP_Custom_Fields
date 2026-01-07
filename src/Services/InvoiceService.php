@@ -148,6 +148,19 @@ class InvoiceService
             );
         }
 
+        // Prevent core fields from being overwritten via additionalData
+        $protectedFields = ['Line', 'CustomerRef'];
+        foreach ($protectedFields as $field) {
+            if (isset($additionalData[$field])) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        '%s should not be in additionalData. Use the method parameters instead.',
+                        $field
+                    )
+                );
+            }
+        }
+
         $client = self::getClient((string) $token);
 
         $path = sprintf(
