@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 use App\Routes\AuthRoutes;
 use App\Routes\CustomFieldsRoutes;
+use App\Routes\CustomerRoutes;
 use App\Routes\InvoiceRoutes;
+use App\Routes\ItemRoutes;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -58,6 +60,18 @@ if (str_starts_with($uri, '/api/auth')) {
 // Custom field routes
 if (str_starts_with($uri, '/api/quickbook/custom-fields')) {
     CustomFieldsRoutes::handle($method, $uri);
+    exit;
+}
+
+// Customer routes
+if (str_starts_with($uri, '/api/quickbook/customers')) {
+    CustomerRoutes::handle($method, $uri);
+    exit;
+}
+
+// Item routes
+if (str_starts_with($uri, '/api/quickbook/items')) {
+    ItemRoutes::handle($method, $uri);
     exit;
 }
 

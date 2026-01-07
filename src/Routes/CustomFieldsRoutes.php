@@ -5,6 +5,7 @@ namespace App\Routes;
 
 use App\Services\AuthService;
 use App\Services\CustomFieldsService;
+use App\Services\CustomFieldValidationService;
 
 class CustomFieldsRoutes
 {
@@ -27,6 +28,11 @@ class CustomFieldsRoutes
 
         if ($uri === $base && $method === 'POST') {
             self::create();
+            return;
+        }
+
+        if ($uri === $base . '/validate' && $method === 'POST') {
+            self::validate();
             return;
         }
 
@@ -103,6 +109,34 @@ class CustomFieldsRoutes
             http_response_code(500);
             echo json_encode([
                 'message' => 'Failed to delete custom field',
+                'error'   => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private static function validate(): void
+    {
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $customFields = (array) ($body['customFields'] ?? []);
+
+        if (empty($customFields)) {
+            http_response_code(400);
+            echo json_encode(['message' => 'customFields array is required']);
+            return;
+        }
+
+        try {
+            // Clear cache to get fresh definitions
+            CustomFieldValidationService::clearCache();
+            
+            $result = CustomFieldValidationService::validateFields($customFields);
+            
+            http_response_code($result['valid'] ? 200 : 400);
+            echo json_encode($result);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'message' => 'Failed to validate custom fields',
                 'error'   => $e->getMessage(),
             ]);
         }

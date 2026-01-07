@@ -1,10 +1,12 @@
 # QuickBooks Custom Fields PHP Sample
 
-This is a small standalone PHP sample app that shows how to:
+This is a comprehensive PHP sample app that demonstrates how to:
 
-- Authenticate with QuickBooks Online using OAuth 2.0.
-- Manage Custom Field Definitions via the App Foundations GraphQL API.
-- Apply a specific custom field (Cost of Fuel) on an invoice using the Accounting REST API.
+- Authenticate with QuickBooks Online using OAuth 2.0
+- Manage Custom Field Definitions via the App Foundations GraphQL API
+- Apply custom fields to various QuickBooks entities (Invoices, Customers, Items)
+- Validate custom field data types automatically
+- Use both STRING and NUMBER custom field types correctly
 
 ## Prerequisites
 
@@ -41,28 +43,55 @@ This is a small standalone PHP sample app that shows how to:
 
 ## Main Endpoints
 
-- `GET /`  
-  Serves the sample front end.
+### Authentication
+- `GET /api/auth/login` - Starts the OAuth flow
+- `GET /api/auth/callback` - Handles the OAuth redirect and stores tokens
+- `POST /api/auth/retrieveToken` - Returns the current token (debugging)
 
-- `GET /api/auth/login`  
-  Starts the OAuth flow.
+### Custom Field Definitions (GraphQL)
+- `GET /api/quickbook/custom-fields` - Lists all custom field definitions
+- `POST /api/quickbook/custom-fields` - Creates a custom field definition
+- `PUT /api/quickbook/custom-fields/:id` - Updates a custom field definition
+- `DELETE /api/quickbook/custom-fields/:id` - Deactivates a custom field definition
+- `POST /api/quickbook/custom-fields/validate` - Validates custom field values against definitions
 
-- `GET /api/auth/callback`  
-  Handles the OAuth redirect and stores tokens in memory.
+### Customers (REST API)
+- `GET /api/quickbook/customers/:id` - Get a customer with custom fields
+- `POST /api/quickbook/customers` - Create a customer with custom fields
+- `PUT /api/quickbook/customers/:id` - Update a customer with custom fields
 
-- `POST /api/auth/retrieveToken`  
-  Returns the current token (for debugging).
+### Items (REST API)
+- `GET /api/quickbook/items/:id` - Get an item with custom fields
+- `POST /api/quickbook/items` - Create an item with custom fields
+- `PUT /api/quickbook/items/:id` - Update an item with custom fields
 
-- `GET /api/quickbook/custom-fields`  
-  Lists custom field definitions via GraphQL.
+### Invoices (REST API)
+- `POST /api/quickbook/invoices` - Create a general invoice with custom fields
+- `POST /api/quickbook/invoices/cost-of-fuel` - Create an invoice with Cost of Fuel custom field (specific example)
 
-- `POST /api/quickbook/custom-fields`  
-  Creates a custom field definition.
+## Features
 
-- `PUT /api/quickbook/custom-fields/:id`  
-  Updates a custom field definition.
+### Custom Field Type Support
+The app automatically handles different custom field types:
+- **STRING**: Text values (uses `StringValue` in the API)
+- **NUMBER**: Numeric values (uses `NumberValue` in the API)
+- **DROPDOWN**: Dropdown selections (uses `StringValue` in the API)
 
-- `POST /api/quickbook/invoices/cost-of-fuel`  
-  Creates an invoice that includes a Cost of Fuel custom field.
+### Automatic Validation
+All services automatically validate custom field values against their definitions:
+- Checks if the field is active
+- Validates data type matches (NUMBER vs STRING)
+- Validates dropdown options if applicable
+- Auto-corrects type mismatches when possible
+
+### Entity Support
+Custom fields can be applied to:
+- **Invoices**: Transaction-level custom fields
+- **Customers**: Customer-specific custom fields
+- **Items**: Product/service-specific custom fields
+
+## Usage Notes
 
 This app is for demonstration and manual testing only, not for production use.
+
+The validation service caches custom field definitions for performance. The cache is automatically cleared when validating to ensure fresh data.
