@@ -77,16 +77,26 @@ This application demonstrates the **complete workflow** for working with QuickBo
 - **PHP**: 8.1 or later
 - **Composer**: Latest version
 - **Web Server**: PHP built-in server or Apache/Nginx
+- **ngrok** (optional): v3.x recommended for local OAuth development
 
 ### QuickBooks Requirements
 - QuickBooks Online account (Sandbox or Production)
 - QuickBooks app with OAuth 2.0 credentials
 - App Foundations API access (for GraphQL)
+- Publicly accessible redirect URI (use ngrok for local development)
 
 ### PHP Extensions
 - `php-curl`
 - `php-json`
 - `php-mbstring`
+
+### Optional Tools
+- **ngrok**: For exposing localhost to internet (OAuth callbacks)
+  - macOS: `brew install --cask ngrok`
+  - Windows: `winget install Ngrok.Ngrok`
+  - Linux: `sudo snap install ngrok`
+  - Download: https://ngrok.com/download
+  - See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for setup guide
 
 ---
 
@@ -177,9 +187,35 @@ You should see:
 PHP 8.1.x Development Server (http://localhost:3000) started
 ```
 
+**💡 Alternative: Using ngrok for Public Access**
+
+If QuickBooks OAuth doesn't work with localhost, use ngrok to create a public URL:
+
+```bash
+# Install ngrok (one-time setup)
+brew install --cask ngrok           # macOS
+winget install Ngrok.Ngrok          # Windows
+sudo snap install ngrok             # Linux
+
+# Configure authtoken (one-time)
+ngrok config add-authtoken <your-token>
+
+# Start server on port 5001
+php -S localhost:5001 -t public
+
+# In another terminal, start ngrok
+ngrok http 5001
+
+# Update .env with ngrok URL (e.g., https://abc123.ngrok-free.app/api/auth/callback)
+# Update QuickBooks Developer Portal with same URL
+# Restart PHP server
+```
+
+**📖 Full ngrok guide**: See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for detailed instructions.
+
 ### 4. Open in Browser
 
-Navigate to: **http://localhost:3000**
+Navigate to: **http://localhost:3000** (or your ngrok URL)
 
 ### 5. Test Authentication
 

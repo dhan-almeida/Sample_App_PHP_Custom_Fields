@@ -4,6 +4,25 @@
 
 ### ✅ New Files Added
 
+#### 🆕 **`NGROK_SETUP.md`** (Complete ngrok Guide)
+**Purpose**: Comprehensive guide for using ngrok with QuickBooks OAuth
+
+**Features**:
+- ✅ What is ngrok and why you need it
+- ✅ Installation for macOS, Windows, Linux
+- ✅ Complete setup walkthrough
+- ✅ Configuration for QuickBooks OAuth
+- ✅ Troubleshooting common issues
+- ✅ Free tier vs paid plan comparison
+- ✅ Security best practices
+
+**When to use**:
+- Local development with QuickBooks OAuth
+- localhost redirect URIs don't work
+- Need public URL for testing
+
+---
+
 #### 1. **`env.example`** (4.1 KB)
 **Purpose**: Comprehensive environment configuration template
 
@@ -53,7 +72,33 @@ cp env.example .env
 
 ### 📝 Updated Files
 
-#### **`README.md`** (21 KB - Enhanced)
+#### **`README.md`** (Enhanced with ngrok)
+
+**ngrok Integration**:
+- ✅ Added to Requirements section
+- ✅ Installation commands for all platforms
+- ✅ Quick setup in "Start the Server" section
+- ✅ Reference to NGROK_SETUP.md
+
+#### **`SETUP_GUIDE.md`** (Enhanced with ngrok)
+
+**New Section**:
+- ✅ "Optional: Using ngrok for Public Access"
+- ✅ When you need ngrok vs when you don't
+- ✅ 8-step ngrok setup process
+- ✅ Integration with existing workflow
+
+#### **`ENV_SETUP_QUICKREF.md`** (Enhanced with ngrok)
+
+**Quick ngrok Reference**:
+- ✅ Installation commands
+- ✅ Basic usage
+- ✅ Port configuration (5001)
+- ✅ Link to full guide
+
+---
+
+#### **Previous Updates**: Environment Setup
 
 **New Sections**:
 1. **Expanded Quick Start** (Step 2):
@@ -133,20 +178,30 @@ sampleapp-customfields-php-full/
 ### Path 1: Quick Setup (Experienced Users)
 1. Read: [`ENV_SETUP_QUICKREF.md`](./ENV_SETUP_QUICKREF.md) (3 min)
 2. Follow: Quick setup commands
-3. Start coding!
+3. If needed: [`NGROK_SETUP.md`](./NGROK_SETUP.md) for OAuth
+4. Start coding!
 
 ### Path 2: Detailed Setup (First-Time Users)
 1. Read: [`SETUP_GUIDE.md`](./SETUP_GUIDE.md) (10 min)
 2. Follow: Step-by-step instructions
-3. Use: Verification checklist
-4. Start coding!
+3. Optional: [`NGROK_SETUP.md`](./NGROK_SETUP.md) if OAuth fails
+4. Use: Verification checklist
+5. Start coding!
 
-### Path 3: Comprehensive Learning
+### Path 3: Local Development with OAuth
+1. Follow: Standard setup (Path 1 or 2)
+2. Read: [`NGROK_SETUP.md`](./NGROK_SETUP.md) for ngrok setup
+3. Configure: Update .env and QuickBooks portal
+4. Test: OAuth flow with ngrok URL
+5. Develop confidently!
+
+### Path 4: Comprehensive Learning
 1. Read: [`README.md`](./README.md) - Main documentation
 2. Read: [`SETUP_GUIDE.md`](./SETUP_GUIDE.md) - Detailed setup
-3. Keep: [`ENV_SETUP_QUICKREF.md`](./ENV_SETUP_QUICKREF.md) - Quick reference
-4. Review: [`PROJECT_OVERVIEW.md`](./PROJECT_OVERVIEW.md) - Architecture
-5. Master the app!
+3. Read: [`NGROK_SETUP.md`](./NGROK_SETUP.md) - ngrok guide
+4. Keep: [`ENV_SETUP_QUICKREF.md`](./ENV_SETUP_QUICKREF.md) - Quick reference
+5. Review: [`PROJECT_OVERVIEW.md`](./PROJECT_OVERVIEW.md) - Architecture
+6. Master the app!
 
 ---
 

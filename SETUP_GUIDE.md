@@ -244,6 +244,108 @@ http://localhost:3000
 
 ---
 
+## 🌐 Optional: Using ngrok for Public Access
+
+### When Do You Need ngrok?
+
+If you're developing locally and QuickBooks OAuth callbacks don't work with `localhost`, you need ngrok to create a public URL.
+
+**You need ngrok if**:
+- ❌ OAuth redirects fail with localhost
+- ❌ QuickBooks can't reach your callback URL
+- ❌ You're not on a public server
+
+**You DON'T need ngrok if**:
+- ✅ Your app is deployed on a public server
+- ✅ You have a public domain pointing to your server
+
+### Quick ngrok Setup
+
+#### 1. Install ngrok
+
+**macOS (Homebrew)**:
+```bash
+brew install --cask ngrok
+ngrok version
+```
+
+**Windows (winget)**:
+```bash
+winget install Ngrok.Ngrok
+ngrok version
+```
+
+**Linux (Snap)**:
+```bash
+sudo snap install ngrok
+ngrok version
+```
+
+Or download from: https://ngrok.com/download
+
+#### 2. Get Auth Token
+
+1. Sign up at: https://dashboard.ngrok.com/signup
+2. Copy your authtoken from: https://dashboard.ngrok.com/get-started/your-authtoken
+
+#### 3. Configure ngrok
+
+```bash
+ngrok config add-authtoken <your-token>
+```
+
+#### 4. Use Port 5001 for PHP Server
+
+```bash
+# Stop your current server (Ctrl+C)
+# Start on port 5001 instead
+php -S localhost:5001 -t public
+```
+
+#### 5. Start ngrok Tunnel
+
+Open a **new terminal** and run:
+
+```bash
+ngrok http 5001
+```
+
+Copy the **Forwarding URL** (e.g., `https://abc123def456.ngrok-free.app`)
+
+#### 6. Update Configuration
+
+**In your `.env` file**:
+```env
+# Change from:
+REDIRECT_URI=http://localhost:3000/api/auth/callback
+
+# To (use your ngrok URL):
+REDIRECT_URI=https://abc123def456.ngrok-free.app/api/auth/callback
+```
+
+**In QuickBooks Developer Portal**:
+1. Go to: Keys & OAuth → Redirect URIs
+2. Add: `https://abc123def456.ngrok-free.app/api/auth/callback`
+3. Save
+
+#### 7. Restart PHP Server
+
+```bash
+# Restart to load new .env values
+php -S localhost:5001 -t public
+```
+
+#### 8. Access via ngrok URL
+
+Open your ngrok URL in browser:
+```
+https://abc123def456.ngrok-free.app
+```
+
+**⚠️ Important**: Free ngrok URLs change every restart. See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for full details.
+
+---
+
 ## 🎯 Next Steps: Using the Application
 
 ### Create Your First Custom Field
