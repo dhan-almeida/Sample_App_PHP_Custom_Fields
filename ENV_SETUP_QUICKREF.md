@@ -16,6 +16,29 @@ php -S localhost:3000 -t public
 open http://localhost:3000
 ```
 
+### 🌐 Using ngrok for OAuth (Optional)
+
+If QuickBooks OAuth doesn't work with localhost, use ngrok:
+
+```bash
+# Install ngrok (choose your platform)
+brew install --cask ngrok           # macOS
+winget install Ngrok.Ngrok          # Windows
+sudo snap install ngrok             # Linux
+
+# Configure (one-time)
+ngrok config add-authtoken <your-token>
+
+# Start tunnel (use port 5001 instead of 3000)
+php -S localhost:5001 -t public     # Terminal 1
+ngrok http 5001                     # Terminal 2
+
+# Update .env with ngrok URL
+REDIRECT_URI=https://abc123.ngrok-free.app/api/auth/callback
+```
+
+**📖 Full Guide**: See [`NGROK_SETUP.md`](./NGROK_SETUP.md) for detailed instructions
+
 ---
 
 ## 🔑 Required Credentials
