@@ -81,7 +81,7 @@ class InvoiceService
         $body = [
             'Line' => [
                 [
-                    'Amount' => 100.00,
+                    'Amount' => $fuelCost,
                     'DetailType' => 'SalesItemLineDetail',
                     'SalesItemLineDetail' => [
                         'ItemRef' => [
@@ -192,6 +192,7 @@ class InvoiceService
         }
 
         // Validate and auto-correct custom field types
+        // Note: validateAndCorrectTypes modifies $customFields by reference
         $validation = CustomFieldValidationService::validateAndCorrectTypes($customFields);
         if (!$validation['valid']) {
             throw new \InvalidArgumentException(
@@ -199,11 +200,12 @@ class InvoiceService
             );
         }
 
-        // Build custom fields
+        // Build custom fields using the auto-corrected types from $customFields
         $customFieldsPayload = [];
         foreach ($customFields as $field) {
             $definitionId = (string) ($field['definitionId'] ?? '');
             $value = $field['value'] ?? '';
+            // Use the type that was auto-corrected by validateAndCorrectTypes
             $type = (string) ($field['type'] ?? 'STRING');
 
             if ($definitionId) {
