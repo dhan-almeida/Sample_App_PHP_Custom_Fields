@@ -557,7 +557,9 @@ sampleapp-customfields-php-full/
 ### Project Documentation
 - [`README.md`](./README.md) - Main documentation
 - [`QUICK_START.md`](./QUICK_START.md) - Quick reference
-- [`IMPLEMENTATION_SUMMARY.md`](./IMPLEMENTATION_SUMMARY.md) - Technical details
+- [`DOCUMENTATION.md`](./DOCUMENTATION.md) - Guide to all documentation
+- [`TESTING.md`](./TESTING.md) - Test results and verification
+- [`BUGFIXES.md`](./BUGFIXES.md) - Security fixes and improvements
 
 ---
 
@@ -572,7 +574,8 @@ If you've followed all steps and verified the checklist items, your application 
 
 **Need Help?**
 - Check the Troubleshooting section in [`README.md`](./README.md)
-- Review [`SYSTEM_TEST_RESULTS.md`](./SYSTEM_TEST_RESULTS.md) for expected behavior
+- Review [`TESTING.md`](./TESTING.md) for test results and expected behavior
+- See [`BUGFIXES.md`](./BUGFIXES.md) for security fixes
 
 ---
 
