@@ -36,9 +36,9 @@ This app shows you how to **create and use custom fields** in QuickBooks Online 
 ## Quick Start
 
 ### 1. Install Dependencies
-```bash
-composer install
-```
+   ```bash
+   composer install
+   ```
 
 ### 2. Configure Environment
 ```bash
@@ -269,7 +269,7 @@ REDIRECT_URI=https://your-ngrok-url.ngrok-free.app/api/auth/callback
 **Test Status**: ✅ 21/21 tests passing (100%)
 
 Run validation test:
-```bash
+   ```bash
 curl -X POST http://localhost:8000/api/quickbook/custom-fields/validate \
   -H "Content-Type: application/json" \
   -d '{
